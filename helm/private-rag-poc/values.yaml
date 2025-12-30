@@ -1,0 +1,54 @@
+image:
+  repository: private-rag-api
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+api:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  resources: {}
+  ollamaModel: llama3
+  ragCollection: private_docs
+  chatgptModel: gpt-4o-mini
+  extraEnv: []
+  openai:
+    apiKey: ""                # set to create secret; otherwise provide existingSecret
+    existingSecret: ""        # name of secret containing OPENAI_API_KEY
+    existingSecretKey: api-key
+
+qdrant:
+  image: qdrant/qdrant:latest
+  service:
+    type: ClusterIP
+    port: 6333
+  resources: {}
+
+postgres:
+  image: postgres:16
+  user: rag
+  password: rag
+  db: rag
+  service:
+    type: ClusterIP
+    port: 5432
+  resources: {}
+
+ollama:
+  image: ollama/ollama:latest
+  service:
+    type: ClusterIP
+    port: 11434
+  resources: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: rag.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

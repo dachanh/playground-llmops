@@ -1,0 +1,6 @@
+apiVersion: v2
+name: private-rag-poc
+description: "Hybrid self-hosted RAG PoC (FastAPI + Ollama + Qdrant + Postgres)"
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
