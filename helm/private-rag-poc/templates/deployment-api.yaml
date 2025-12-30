@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "private-rag-poc.fullname" . }}-api
+  labels:
+    app.kubernetes.io/name: {{ include "private-rag-poc.name" . }}
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "private-rag-poc.name" . }}
+      app.kubernetes.io/component: api
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "private-rag-poc.name" . }}
+        app.kubernetes.io/component: api
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DATABASE_URL
+              value: postgres://{{ .Values.postgres.user }}:{{ .Values.postgres.password }}@{{ include "private-rag-poc.fullname" . }}-postgres:{{ .Values.postgres.service.port }}/{{ .Values.postgres.db }}
+            - name: QDRANT_URL
+              value: http://{{ include "private-rag-poc.fullname" . }}-qdrant:{{ .Values.qdrant.service.port }}
+            - name: OLLAMA_URL
+              value: http://{{ include "private-rag-poc.fullname" . }}-ollama:{{ .Values.ollama.service.port }}
+            - name: OLLAMA_MODEL
+              value: {{ .Values.api.ollamaModel }}
+            - name: RAG_COLLECTION
+              value: {{ .Values.api.ragCollection }}
+            - name: CHATGPT_MODEL
+              value: {{ .Values.api.chatgptModel }}
+            {{- if .Values.api.openai.apiKey }}
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "private-rag-poc.fullname" . }}-openai
+                  key: api-key
+            {{- else if .Values.api.openai.existingSecret }}
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.api.openai.existingSecret }}
+                  key: {{ .Values.api.openai.existingSecretKey }}
+            {{- end }}
+            {{- range .Values.api.extraEnv }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}

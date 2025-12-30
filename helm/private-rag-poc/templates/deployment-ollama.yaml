@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "private-rag-poc.fullname" . }}-ollama
+  labels:
+    app.kubernetes.io/name: {{ include "private-rag-poc.name" . }}
+    app.kubernetes.io/component: ollama
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "private-rag-poc.name" . }}
+      app.kubernetes.io/component: ollama
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "private-rag-poc.name" . }}
+        app.kubernetes.io/component: ollama
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: ollama
+          image: "{{ .Values.ollama.image }}"
+          ports:
+            - name: http
+              containerPort: 11434
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+          resources:
+            {{- toYaml .Values.ollama.resources | nindent 12 }}
+      volumes:
+        - name: ollama-data
+          emptyDir: {}

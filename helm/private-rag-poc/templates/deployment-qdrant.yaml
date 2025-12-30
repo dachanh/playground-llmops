@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "private-rag-poc.fullname" . }}-qdrant
+  labels:
+    app.kubernetes.io/name: {{ include "private-rag-poc.name" . }}
+    app.kubernetes.io/component: qdrant
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "private-rag-poc.name" . }}
+      app.kubernetes.io/component: qdrant
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "private-rag-poc.name" . }}
+        app.kubernetes.io/component: qdrant
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: qdrant
+          image: "{{ .Values.qdrant.image }}"
+          ports:
+            - name: http
+              containerPort: 6333
+          resources:
+            {{- toYaml .Values.qdrant.resources | nindent 12 }}
